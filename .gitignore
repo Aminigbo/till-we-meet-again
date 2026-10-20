@@ -1,4 +1,5 @@
 node_modules/
+.vercel/
 data/
 # Environment files hold secrets. The *.example files are safe to commit.
 .env
@@ -8,3 +9,4 @@ data/
 .firebaserc
 service-account*.json
 *.json.key
+.vercel

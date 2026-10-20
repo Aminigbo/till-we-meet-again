@@ -63,6 +63,23 @@ app.get('/robots.txt', (req, res) => { res.writeHead(200, { 'Content-Type': 'tex
 
 app.ready = bootstrap();
 
+// Vercel loads this file and requires the export to be a request function or an
+// http.Server. A plain app object makes the runtime exit with FUNCTION_INVOCATION_FAILED.
+async function handler(req, res) {
+  try {
+    await app.ready;
+    await app.handle(req, res);
+  } catch (e) {
+    console.error(e);
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Could not start');
+    }
+  }
+}
+handler.ready = app.ready;
+handler.handle = app.handle;
+
 if (require.main === module) {
   app.ready.then(() => listen(app, config.port)).then(() => {
     console.log(`tillwemeet running at ${config.baseUrl} (port ${config.port})`);
@@ -71,4 +88,4 @@ if (require.main === module) {
   }).catch((e) => { console.error('Could not start:', e.message); process.exit(1); });
 }
 
-module.exports = app;
+module.exports = handler;
