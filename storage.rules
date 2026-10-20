@@ -1,0 +1,10 @@
+rules_version = '2';
+// Uploads are written and served by the tillwemeet server only (Admin SDK).
+// Death certificates and ID photos must never be readable directly, so all client access is refused.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

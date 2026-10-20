@@ -1,0 +1,8 @@
+node_modules
+data
+.env
+.env.*
+!.env.production.example
+service-account*.json
+*.json.key
+test

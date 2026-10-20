@@ -1,0 +1,10 @@
+node_modules/
+data/
+# Environment files hold secrets. The *.example files are safe to commit.
+.env
+.env.*
+!.env.example
+!.env.production.example
+.firebaserc
+service-account*.json
+*.json.key

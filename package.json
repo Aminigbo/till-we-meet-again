@@ -1,0 +1,23 @@
+{
+  "name": "tillwemeet",
+  "version": "1.0.0",
+  "description": "tillwemeet \u2014 a digital cemetery and tribute platform",
+  "main": "server.js",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed.js",
+    "make-admin": "node scripts/make-admin.js",
+    "test": "node test/localstore.js && node test/smoke.js",
+    "indexes": "node test/smoke.js --write-indexes",
+    "deploy:firestore": "firebase deploy --only firestore:indexes,firestore:rules,storage",
+    "reindex": "node scripts/reindex-search.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
