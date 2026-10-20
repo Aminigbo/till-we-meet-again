@@ -4,6 +4,9 @@ const config = require('./lib/config');
 const D = require('./lib/db');
 const { createApp, listen } = require('./lib/app');
 const { createUser, findByEmail } = require('./lib/users');
+const { createProfile } = require('./lib/profiles');
+const storage = require('./lib/storage');
+const { encrypt } = require('./lib/util');
 const auth = require('./routes/auth');
 const pages = require('./views/pages');
 
@@ -41,6 +44,31 @@ async function bootstrap() {
     if (existing) await D.col('users').doc(existing.id).update({ role: 'admin' });
     else await createUser({ email: config.adminEmail, password: config.adminPassword, full_name: 'tillwemeet Admin', role: 'admin' });
     console.log(`Admin account ready: ${config.adminEmail}`);
+  }
+  // The local test memorial lives in data/local-firestore.json, which Vercel never receives.
+  // Recreate it on the temporary store so production shows the same published page.
+  if (process.env.VERCEL && D.mode === 'local' && !(await D.getDoc('slugs', 'test-record-2024'))) {
+    const admin = await findByEmail(config.adminEmail);
+    const photo = 'demo-test-record.jpg';
+    const cert = 'demo-test-record-cert.png';
+    await storage.put('public', photo, fs.readFileSync(path.join(config.ROOT, 'scripts/seed-assets/portrait-00.jpg')));
+    await storage.put('private', cert, fs.readFileSync(path.join(config.ROOT, 'scripts/seed-assets/sample-certificate.png')));
+    const { id } = await createProfile({
+      creator_id: admin.id, creator_name: admin.full_name, category: 'regular',
+      titles: 'Mr', first_name: 'Test', middle_name: '', last_name: 'Record', nickname: 'Demo', gender: 'Male',
+      dob: '1948-03-12', dod: '2024-06-18', country: 'Nigeria', state: 'Lagos', lga: 'Ikeja',
+      place_of_death: 'Ikeja General Hospital', cause_of_death: '', burial_date: '2024-06-22', burial_place: 'Family compound, Ikeja',
+      biography: 'Test Record was a neighbour, a teacher and the person everyone called when something needed doing. This memorial was created as a sample so the site can be reviewed. The dates, places and story are fictional.',
+      epitaph: '', survivors: '', photo, tone_id: null, video: null, video_duration: null, gallery: [], timeline: [], service_events: [],
+      death_cert: cert, death_cert_number: 'NPC/TEST/000001', death_cert_authority: 'National Population Commission',
+      uploader_relationship: 'Son', uploader_nin_enc: encrypt('12345678901'), uploader_nin_last4: '8901',
+      uploader_photo: null, uploader_id_doc: null, uploader_phone: '08031234567', uploader_address: '12 Allen Avenue, Ikeja',
+      next_of_kin_name: 'Ada Record', next_of_kin_phone: '08039876543', attested_at: D.now(),
+    });
+    const now = D.now();
+    await D.col('profiles').doc(id).update({ status: 'approved', approved_at: now, approved_by: admin.id, listing_amount: 10000, listing_paid_at: now });
+    D.bustCache();
+    console.log('Demo memorial ready: /m/test-record-2024');
   }
 }
 
